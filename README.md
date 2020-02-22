@@ -73,7 +73,7 @@ location /static/ {
 }
 ```
 
-When used together with `ngx_security_headers`, it can be simplified further:
+When used together with [`ngx_security_headers`](https://github.com/GetPageSpeed/ngx_security_headers), it can be simplified further:
 
 ```
 security_headers on;
