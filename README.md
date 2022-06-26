@@ -32,11 +32,11 @@ How it's different to `expires max;`:
 * Sends `Expires` only when it's really necessary, e.g. when a client is requesting resources over `HTTP/1.0`
 * Sets `public` attribute to ensure the assets can be cached by public caches, which is typically a desired thing.
 
-Thus in most cases, `immutable on;` can be used as as a better alternative to `expires max;`.
+Thus, in most cases, `immutable on;` can be used as a better alternative to `expires max;`.
 
 ## Installation 
 
-### CentOS/RHEL 6, 7, 8
+### CentOS/RHEL 6, 7, 8; Amazon Linux 2; Fedora Linux
 
     sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
     sudo yum -y install nginx-module-immutable

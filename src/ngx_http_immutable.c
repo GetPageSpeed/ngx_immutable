@@ -89,9 +89,8 @@ static ngx_int_t
 ngx_http_immutable_filter(ngx_http_request_t *r)
 {
     ngx_http_immutable_loc_conf_t  *conf;
-    ngx_table_elt_t     *e, *cc, **ccp;
+    ngx_table_elt_t     *e, *cc;
     size_t               len;
-    ngx_uint_t           i;
 
     conf = ngx_http_get_module_loc_conf(r, ngx_http_immutable_module);
 
@@ -125,7 +124,34 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
         e->value.len = len - 1;
         e->value.data = (u_char *) "Thu, 31 Dec 2037 23:55:55 GMT";
     } else {
+#if defined(nginx_version) && nginx_version >= 1023000
+        cc = r->headers_out.cache_control;
 
+        if (cc == NULL) {
+
+            cc = ngx_list_push(&r->headers_out.headers);
+            if (cc == NULL) {
+                e->hash = 0;
+                return NGX_ERROR;
+            }
+
+            r->headers_out.cache_control = cc;
+            cc->next = NULL;
+
+            cc->hash = 1;
+            ngx_str_set(&cc->key, "Cache-Control");
+
+        } else {
+            for (cc = cc->next; cc; cc = cc->next) {
+                cc->hash = 0;
+            }
+
+            cc = r->headers_out.cache_control;
+            cc->next = NULL;
+        }
+#else
+        ngx_table_elt_t     **ccp;
+        ngx_uint_t           i;
         ccp = r->headers_out.cache_control.elts;
 
         if (ccp == NULL) {
@@ -158,7 +184,7 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
 
             cc = ccp[0];
         }
-
+#endif
 
         /* 10 years */
         ngx_str_set(&cc->value, "public,max-age=31536000,immutable");
