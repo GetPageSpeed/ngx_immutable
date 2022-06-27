@@ -131,7 +131,6 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
 
             cc = ngx_list_push(&r->headers_out.headers);
             if (cc == NULL) {
-                e->hash = 0;
                 return NGX_ERROR;
             }
 
