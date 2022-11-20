@@ -82,7 +82,7 @@ The installation requires a [subscription](https://www.getpagespeed.com/repo-sub
 
 For any OS listed above, installation steps are the same:
 
-```bash```
+```bash
 sudo yum -y install https://extras.getpagespeed.com/release-latest.rpm
 sudo yum -y install nginx-module-immutable
 ```
