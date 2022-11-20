@@ -16,5 +16,5 @@ __DATA__
 --- response_body
 hello world
 --- response_headers
-Cache-Control: public,max-age=31536000,immutable
+Cache-Control: public,max-age=31536000,stale-while-revalidate=31536000,stale-if-error=31536000,immutable
 

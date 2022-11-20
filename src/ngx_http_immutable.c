@@ -185,8 +185,8 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
         }
 #endif
 
-        /* 10 years */
-        ngx_str_set(&cc->value, "public,max-age=31536000,immutable");
+        /* 1 year is the maximum allowed by spec */
+        ngx_str_set(&cc->value, "public,max-age=31536000,stale-while-revalidate=31536000,stale-if-error=31536000,immutable");
     }
 
     /* proceed to the next handler in chain */
