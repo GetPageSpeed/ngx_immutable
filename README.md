@@ -64,13 +64,28 @@ The [RFC](https://www.ietf.org/rfc/rfc2616.txt) defines to use one year to make 
 
 More details in [the article](https://ashton.codes/set-cache-control-max-age-1-year/).
 
-## Installation 
+## Ubuntu and Debian packages
+
+It's easy to install the module package for these operating systems.
+
+`ngx_immutable` is part of the APT NGINX Extras collection, so you can install
+it alongside [any modules](https://apt-nginx-extras.getpagespeed.com/modules/), 
+including Brotli.
+
+First, [set up the repository](https://apt-nginx-extras.getpagespeed.com/apt-setup/), then:
+
+```bash
+sudo apt-get update
+sudo apt-get install nginx-module-immutable
+```
+
+## Installation for RPM-based systems
 
 GetPageSpeed provides packaging of the `nginx-module-immutable` in its repositories, as part of its [NGINX Extras](https://nginx-extras.getpagespeed.com/) package collection.
 
-The follow operating systems are supported:
+The following operating systems are supported:
 
-* RedHat Enterprise Linux 6, 7, 8, 9
+* Red Hat Enterprise Linux 6, 7, 8, 9
 * CentOS 6, 7, 8, 9
 * AlmaLinux 8, 9
 * Rocky Linux 8, 9
