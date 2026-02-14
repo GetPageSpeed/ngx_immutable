@@ -1,2 +1,6 @@
 /nbproject
 /t/servroot
+
+# AI assistants
+CLAUDE.md
+.claude/

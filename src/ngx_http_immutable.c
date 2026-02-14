@@ -10,6 +10,7 @@
 
 typedef struct {
     ngx_flag_t                 enable;
+    ngx_flag_t                 cache_status;  /* RFC 9211 Cache-Status header */
 
     ngx_hash_t                 types;
     ngx_array_t                *types_keys;
@@ -35,6 +36,13 @@ static ngx_command_t  ngx_http_immutable_commands[] = {
           ngx_conf_set_flag_slot,
           NGX_HTTP_LOC_CONF_OFFSET,
           offsetof( ngx_http_immutable_loc_conf_t, enable ),
+          NULL },
+
+        { ngx_string("immutable_cache_status"),
+          NGX_HTTP_MAIN_CONF|NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_FLAG,
+          ngx_conf_set_flag_slot,
+          NGX_HTTP_LOC_CONF_OFFSET,
+          offsetof(ngx_http_immutable_loc_conf_t, cache_status),
           NULL },
 
         { ngx_string("immutable_types"),
@@ -100,6 +108,13 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
 
     if (r->headers_out.status != NGX_HTTP_OK
         || r != r->main)
+    {
+        return ngx_http_next_header_filter(r);
+    }
+
+    /* Check MIME type if immutable_types is configured */
+    if (conf->types.size
+        && ngx_http_test_content_type(r, &conf->types) == NULL)
     {
         return ngx_http_next_header_filter(r);
     }
@@ -189,6 +204,20 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
         ngx_str_set(&cc->value, "public,max-age=31536000,stale-while-revalidate=31536000,stale-if-error=31536000,immutable");
     }
 
+    /* RFC 9211 Cache-Status header for debugging */
+    if (conf->cache_status) {
+        ngx_table_elt_t  *cs;
+
+        cs = ngx_list_push(&r->headers_out.headers);
+        if (cs == NULL) {
+            return NGX_ERROR;
+        }
+
+        cs->hash = 1;
+        ngx_str_set(&cs->key, "Cache-Status");
+        ngx_str_set(&cs->value, "\"nginx/immutable\"; hit; ttl=31536000");
+    }
+
     /* proceed to the next handler in chain */
     return ngx_http_next_header_filter(r);
 }
@@ -205,6 +234,7 @@ ngx_http_immutable_create_loc_conf(ngx_conf_t *cf)
     }
 
     conf->enable = NGX_CONF_UNSET;
+    conf->cache_status = NGX_CONF_UNSET;
 
     return conf;
 }
@@ -217,7 +247,8 @@ ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf, void *parent,
     ngx_http_immutable_loc_conf_t *prev = parent;
     ngx_http_immutable_loc_conf_t *conf = child;
 
-    ngx_conf_merge_value( conf->enable, prev->enable, 0 )
+    ngx_conf_merge_value(conf->enable, prev->enable, 0);
+    ngx_conf_merge_value(conf->cache_status, prev->cache_status, 0);
 
     if (ngx_http_merge_types(cf, &conf->types_keys, &conf->types,
                              &prev->types_keys, &prev->types,

@@ -11,13 +11,13 @@ This tiny NGINX module can help improve caching of your public static assets, by
 Websites and frameworks which rely on the cache-busting pattern:
 
 * static resources include version/hashes in their URLs, while never modifying the resources
-* when necessary, updating the resources with newer versions that have new version-numbers/hashes, 
+* when necessary, updating the resources with newer versions that have new version-numbers/hashes,
 so that their URLs are different
 
 Popular frameworks which use cache-busting:
 
 * Magento 2
-* Include your own here! 
+* Include your own here!
 
 ## Synopsis
 
@@ -36,22 +36,80 @@ will yield the following HTTP headers:
 ```
 ...
 Cache-Control: public,max-age=31536000,stale-while-revalidate=31536000,stale-if-error=31536000,immutable
-Expires: Thu, 31 Dec 2037 23:55:55 GMT 
+Expires: Thu, 31 Dec 2037 23:55:55 GMT
 ...
 ```
 
 How it's different to `expires max;`:
 
-* Sets `immutable` attribute, e.g. `Cache-Control: public,max-age=31536000,immutable` for improved caching. 
+* Sets `immutable` attribute, e.g. `Cache-Control: public,max-age=31536000,immutable` for improved caching.
 That is 1 year and not 10 years, see why below.
 * Sends `Expires` only when it's really necessary, e.g. when a client is requesting resources over `HTTP/1.0`
 * Sets `public` attribute to ensure the assets can be cached by public caches, which is typically a desired thing.
 
-Due to the [lacking support of `immutable`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#browser_compatibility) in Chromium-based browsers, 
-we also add `stale-while-revalidate=31536000,stale-if-error=31536000` which helps to improve cache hit-ratio in edge cases. 
+Due to the [lacking support of `immutable`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#browser_compatibility) in Chromium-based browsers,
+we also add `stale-while-revalidate=31536000,stale-if-error=31536000` which helps to improve cache hit-ratio in edge cases.
 Use of these directives allows serving cached responses beyond their cache lifetime, which is forever in case of immutable resources.
 
 Thus, in most cases, `immutable on;` can be used as a better alternative to `expires max;` to implement the cache-busting pattern.
+
+## Directives
+
+### immutable
+
+**Syntax:** `immutable on | off;`
+
+**Default:** `immutable off;`
+
+**Context:** `http`, `server`, `location`
+
+Enables or disables immutable caching headers for the location.
+
+### immutable_types
+
+**Syntax:** `immutable_types mime-type ...;`
+
+**Default:** `immutable_types *;`
+
+**Context:** `http`, `server`, `location`
+
+Restricts immutable headers to responses with the specified MIME types. By default, immutable headers are applied to all MIME types. Supports wildcards like `image/*`.
+
+```nginx
+location /static/ {
+    immutable on;
+    immutable_types text/css application/javascript image/*;
+}
+```
+
+### immutable_cache_status
+
+**Syntax:** `immutable_cache_status on | off;`
+
+**Default:** `immutable_cache_status off;`
+
+**Context:** `http`, `server`, `location`
+
+Enables the [RFC 9211](https://datatracker.ietf.org/doc/rfc9211/) `Cache-Status` header for debugging and observability. When enabled, responses include:
+
+```
+Cache-Status: "nginx/immutable"; hit; ttl=31536000
+```
+
+This header helps debug caching behavior across multi-layer caching architectures (NGINX -> CDN -> Browser). Each cache layer can append its own status, creating a chain like:
+
+```
+Cache-Status: "nginx/immutable"; hit; ttl=31536000, "cloudflare"; fwd=uri-miss; stored
+```
+
+Example configuration:
+
+```nginx
+location /static/ {
+    immutable on;
+    immutable_cache_status on;
+}
+```
 
 ### Why 31536000 seconds (1 year?)
 
@@ -69,7 +127,7 @@ More details in [the article](https://ashton.codes/set-cache-control-max-age-1-y
 It's easy to install the module package for these operating systems.
 
 `ngx_immutable` is part of the APT NGINX Extras collection, so you can install
-it alongside [any modules](https://apt-nginx-extras.getpagespeed.com/modules/), 
+it alongside [any modules](https://apt-nginx-extras.getpagespeed.com/modules/),
 including Brotli.
 
 First, [set up the repository](https://apt-nginx-extras.getpagespeed.com/apt-setup/), then:
@@ -90,7 +148,7 @@ The following operating systems are supported:
 * AlmaLinux 8, 9
 * Rocky Linux 8, 9
 * Amazon Linux 2
-* Fedora Linux, the 2 most recent releases 
+* Fedora Linux, the 2 most recent releases
 
 The installation requires a [subscription](https://www.getpagespeed.com/repo-subscribe) for all the operating systems listed, except Fedora Linux, for which it is free.
 
@@ -145,7 +203,7 @@ security_headers on;
 location /static/ {
     immutable on;
 
-    
+
     location ~ ^/static/version {
         rewrite ^/static/(version\d*/)?(.*)$ /static/$2 last;
     }
