@@ -26,9 +26,16 @@ static char *ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf,
 static ngx_int_t ngx_http_immutable_init(ngx_conf_t *cf);
 
 /*
- * We don't define default types - setting post to NULL means
- * no default types are added when immutable_types directive is used.
- * This avoids the nginx bug where ngx_null_string causes a crash.
+ * Unlike gzip_types or security_headers_text_types which default to "text/html",
+ * immutable should apply to ALL types when immutable_types is not specified.
+ *
+ * We achieve this by:
+ * 1. Setting post to NULL here (no default types array)
+ * 2. Conditionally calling ngx_http_merge_types only when types_keys is set
+ * 3. Checking types_keys == NULL in filter to mean "apply to all types"
+ *
+ * Note: A default_types array with only ngx_null_string crashes nginx's
+ * ngx_http_types_slot because it expects at least one real type entry.
  */
 
 static ngx_command_t  ngx_http_immutable_commands[] = {
