@@ -26,16 +26,15 @@ static char *ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf,
 static ngx_int_t ngx_http_immutable_init(ngx_conf_t *cf);
 
 /*
- * Unlike gzip_types or security_headers_text_types which default to "text/html",
- * immutable should apply to ALL types when immutable_types is not specified.
- *
- * We achieve this by:
- * 1. Setting post to NULL here (no default types array)
+ * Unlike gzip_types which defaults to "text/html", immutable applies to ALL
+ * types when immutable_types is not specified. We achieve this by:
+ * 1. Setting post to NULL (no default types)
  * 2. Conditionally calling ngx_http_merge_types only when types_keys is set
- * 3. Checking types_keys == NULL in filter to mean "apply to all types"
+ * 3. Checking types_keys == NULL in filter to mean "apply to all"
  *
- * Note: A default_types array with only ngx_null_string crashes nginx's
- * ngx_http_types_slot because it expects at least one real type entry.
+ * Note: Using "*" in default_types won't work because ngx_http_set_default_types
+ * treats it as a literal MIME type, not a wildcard. The "*" wildcard is only
+ * handled by ngx_http_types_slot when parsing config directives.
  */
 
 static ngx_command_t  ngx_http_immutable_commands[] = {
@@ -264,10 +263,6 @@ ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf, void *parent,
      * Only merge types if at least one context has types configured.
      * If neither has types, we skip the merge entirely and types_keys
      * remains NULL, which means "apply to all types" in our filter.
-     *
-     * This avoids the need for a default_types array, which would either
-     * require a non-empty default (like gzip's "text/html") or cause a
-     * crash in ngx_http_merge_types when passed NULL.
      */
     if (conf->types_keys != NULL || prev->types_keys != NULL) {
         if (ngx_http_merge_types(cf, &conf->types_keys, &conf->types,
