@@ -25,9 +25,11 @@ static char *ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf,
                                                       void *parent, void *child);
 static ngx_int_t ngx_http_immutable_init(ngx_conf_t *cf);
 
-static ngx_str_t  ngx_http_immutable_default_types[] = {
-    ngx_null_string
-};
+/*
+ * We don't define default types - setting post to NULL means
+ * no default types are added when immutable_types directive is used.
+ * This avoids the nginx bug where ngx_null_string causes a crash.
+ */
 
 static ngx_command_t  ngx_http_immutable_commands[] = {
 
@@ -50,7 +52,7 @@ static ngx_command_t  ngx_http_immutable_commands[] = {
           ngx_http_types_slot,
           NGX_HTTP_LOC_CONF_OFFSET,
           offsetof(ngx_http_immutable_loc_conf_t, types_keys),
-          &ngx_http_immutable_default_types[0] },
+          NULL },
 
         ngx_null_command
 };
@@ -108,6 +110,14 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
 
     if (r->headers_out.status != NGX_HTTP_OK
         || r != r->main)
+    {
+        return ngx_http_next_header_filter(r);
+    }
+
+    /* Check MIME type if immutable_types is configured */
+    if (conf->types_keys != NULL
+        && conf->types.size > 0
+        && ngx_http_test_content_type(r, &conf->types) == NULL)
     {
         return ngx_http_next_header_filter(r);
     }
@@ -243,12 +253,23 @@ ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf, void *parent,
     ngx_conf_merge_value(conf->enable, prev->enable, 0);
     ngx_conf_merge_value(conf->cache_status, prev->cache_status, 0);
 
-    if (ngx_http_merge_types(cf, &conf->types_keys, &conf->types,
-                             &prev->types_keys, &prev->types,
-                             ngx_http_immutable_default_types)
-        != NGX_OK)
-    {
-        return NGX_CONF_ERROR;
+    /*
+     * Only merge types if at least one context has types configured.
+     * If neither has types, we skip the merge entirely and types_keys
+     * remains NULL, which means "apply to all types" in our filter.
+     *
+     * This avoids the need for a default_types array, which would either
+     * require a non-empty default (like gzip's "text/html") or cause a
+     * crash in ngx_http_merge_types when passed NULL.
+     */
+    if (conf->types_keys != NULL || prev->types_keys != NULL) {
+        if (ngx_http_merge_types(cf, &conf->types_keys, &conf->types,
+                                 &prev->types_keys, &prev->types,
+                                 ngx_http_html_default_types)
+            != NGX_OK)
+        {
+            return NGX_CONF_ERROR;
+        }
     }
 
 

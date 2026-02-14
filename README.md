@@ -94,6 +94,26 @@ location /static/ {
 }
 ```
 
+### immutable_types
+
+**Syntax:** `immutable_types mime-type ...;`
+
+**Default:** (none - applies to all types when not specified)
+
+**Context:** `http`, `server`, `location`
+
+Restricts the immutable caching headers to responses with the specified MIME types. When not specified, immutable headers apply to all responses. This is similar to how `gzip_types` works for the gzip module.
+
+Example configuration:
+
+```nginx
+location /static/ {
+    immutable on;
+    # Only apply immutable headers to JavaScript and CSS files
+    immutable_types application/javascript text/css;
+}
+```
+
 ### Why 31536000 seconds (1 year?)
 
 The [RFC](https://www.ietf.org/rfc/rfc2616.txt) defines to use one year to make a response as "never expires":
