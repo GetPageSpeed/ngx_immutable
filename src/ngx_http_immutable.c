@@ -25,8 +25,8 @@ static char *ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf,
                                                       void *parent, void *child);
 static ngx_int_t ngx_http_immutable_init(ngx_conf_t *cf);
 
-ngx_str_t  ngx_http_immutable_types[] = {
-        ngx_null_string
+static ngx_str_t  ngx_http_immutable_default_types[] = {
+    ngx_null_string
 };
 
 static ngx_command_t  ngx_http_immutable_commands[] = {
@@ -50,7 +50,7 @@ static ngx_command_t  ngx_http_immutable_commands[] = {
           ngx_http_types_slot,
           NGX_HTTP_LOC_CONF_OFFSET,
           offsetof(ngx_http_immutable_loc_conf_t, types_keys),
-          &ngx_http_immutable_types[0] },
+          &ngx_http_immutable_default_types[0] },
 
         ngx_null_command
 };
@@ -258,7 +258,7 @@ ngx_http_immutable_merge_loc_conf(ngx_conf_t *cf, void *parent,
 
     if (ngx_http_merge_types(cf, &conf->types_keys, &conf->types,
                              &prev->types_keys, &prev->types,
-                             ngx_http_immutable_types)
+                             ngx_http_immutable_default_types)
         != NGX_OK)
     {
         return NGX_CONF_ERROR;
