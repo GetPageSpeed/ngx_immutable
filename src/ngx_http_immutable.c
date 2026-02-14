@@ -112,13 +112,6 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
         return ngx_http_next_header_filter(r);
     }
 
-    /* Check MIME type if immutable_types is configured */
-    if (conf->types.size
-        && ngx_http_test_content_type(r, &conf->types) == NULL)
-    {
-        return ngx_http_next_header_filter(r);
-    }
-
     if (r->http_version < NGX_HTTP_VERSION_11) {
         e = r->headers_out.expires;
 
