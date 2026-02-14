@@ -65,23 +65,6 @@ Thus, in most cases, `immutable on;` can be used as a better alternative to `exp
 
 Enables or disables immutable caching headers for the location.
 
-### immutable_types
-
-**Syntax:** `immutable_types mime-type ...;`
-
-**Default:** none (applies to all MIME types)
-
-**Context:** `http`, `server`, `location`
-
-Restricts immutable headers to responses with the specified MIME types. By default (when this directive is not used), immutable headers are applied to all MIME types.
-
-```nginx
-location /static/ {
-    immutable on;
-    immutable_types text/css application/javascript image/png image/jpeg;
-}
-```
-
 ### immutable_cache_status
 
 **Syntax:** `immutable_cache_status on | off;`
