@@ -112,6 +112,19 @@ ngx_http_immutable_filter(ngx_http_request_t *r)
         return ngx_http_next_header_filter(r);
     }
 
+    /*
+     * Check MIME type filtering.
+     * Only filter if immutable_types was explicitly configured (types_keys != NULL)
+     * AND the types hash was successfully built (types.size > 0).
+     * If content type doesn't match, skip setting immutable headers.
+     */
+    if (conf->types_keys != NULL
+        && conf->types.size > 0
+        && ngx_http_test_content_type(r, &conf->types) == NULL)
+    {
+        return ngx_http_next_header_filter(r);
+    }
+
     if (r->http_version < NGX_HTTP_VERSION_11) {
         e = r->headers_out.expires;
 
